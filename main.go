@@ -38,10 +38,10 @@ func getCustomers(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var customer []customer
+	var customers []customer
 	for rows.Next() {
 		var a customer
-		err := rows.Scan(&a.ID, &a.Title, &a.Artist, &a.Price)
+		err := rows.Scan(&a.ID, &a.FirstName, &a.LastName, &a.Phone, &a.Email)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -53,4 +53,12 @@ func getCustomers(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, customers)
+}
+
+type customer struct {
+	ID        string `json:"id"`
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+	Phone     string `json:"phone"`
+	Email     string `json:"email"`
 }
