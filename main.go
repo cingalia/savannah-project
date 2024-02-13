@@ -58,11 +58,14 @@ func getCustomers(c *gin.Context) {
 }
 
 type customer struct {
-	ID        string `json:"id"`
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
-	Phone     string `json:"phone"`
-	Email     string `json:"email"`
+	ID         string `json:"id"`
+	FirstName  string `json:"firstname"`
+	LastName   string `json:"lastname"`
+	Phone      string `json:"phone"`
+	Password   string `json:"password"`
+	Email      string `json:"email"`
+	Created_At string `json:"created_at"`
+	Last_Login string `json:"last_login"`
 }
 
 func createCustomer(c *gin.Context) {
