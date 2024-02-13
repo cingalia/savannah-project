@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -26,6 +27,7 @@ func main() {
 	router := gin.Default()
 	router.GET("/customers", getCustomers)
 	router.POST("/customers", createCustomer)
+	router.POST("/register", registerCustomer)
 
 	router.Run("localhost:8088")
 }
@@ -34,16 +36,16 @@ func main() {
 func getCustomers(c *gin.Context) {
 	c.Header("Content-Type", "application/json")
 
-	rows, err := db.Query("SELECT id, firstname, lastname, phone, email FROM customers")
+	rows, err := db.Query("SELECT id, firstname, lastname, phone, email, created_at FROM customers")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
 
-	var customers []customer
+	var customers []customerViewModel
 	for rows.Next() {
-		var a customer
-		err := rows.Scan(&a.ID, &a.FirstName, &a.LastName, &a.Phone, &a.Email)
+		var a customerViewModel
+		err := rows.Scan(&a.ID, &a.FirstName, &a.LastName, &a.Phone, &a.Email, &a.Created_At)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -68,7 +70,7 @@ type customer struct {
 	Last_Login string `json:"last_login"`
 }
 
-type customerViewModel struct {
+type customerReadModel struct {
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 	Phone     string `json:"phone"`
@@ -76,21 +78,56 @@ type customerViewModel struct {
 	Email     string `json:"email"`
 }
 
-func createCustomer(c *gin.Context) {
+type customerViewModel struct {
+	ID         string `json:"id"`
+	FirstName  string `json:"firstname"`
+	LastName   string `json:"lastname"`
+	Phone      string `json:"phone"`
+	Email      string `json:"email"`
+	Created_At string `json:"created_at"`
+	Last_Login string `json:"last_login"`
+}
 
-	var awesomeCustomer customer
+func registerCustomer(c *gin.Context) {
+	var awesomeCustomer customerReadModel
 	if err := c.BindJSON(&awesomeCustomer); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
+	//hash password
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(awesomeCustomer.Phone), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	stmt, err := db.Prepare("INSERT INTO customers (id, firstname, lastname, phone, email) VALUES ($1, $2, $3, $4, $5)")
+	stmt, err := db.Prepare("INSERT INTO customers (firstname, lastname, phone, password, email) VALUES ($1, $2, $3, $4, $5)")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer stmt.Close()
 
-	if _, err := stmt.Exec(awesomeCustomer.ID, awesomeCustomer.FirstName, awesomeCustomer.LastName, awesomeCustomer.Phone, awesomeCustomer.Email); err != nil {
+	if _, err := stmt.Exec(awesomeCustomer.FirstName, awesomeCustomer.LastName, awesomeCustomer.Phone, passwordHash, awesomeCustomer.Email); err != nil {
+		log.Fatal(err)
+	}
+
+	c.JSON(http.StatusCreated, awesomeCustomer)
+}
+
+func createCustomer(c *gin.Context) {
+
+	var awesomeCustomer customerReadModel
+	if err := c.BindJSON(&awesomeCustomer); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+
+	stmt, err := db.Prepare("INSERT INTO customers (firstname, lastname, phone, password, email) VALUES ($1, $2, $3, $4, $5)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+
+	if _, err := stmt.Exec(awesomeCustomer.FirstName, awesomeCustomer.LastName, awesomeCustomer.Phone, awesomeCustomer.Password, awesomeCustomer.Email); err != nil {
 		log.Fatal(err)
 	}
 
