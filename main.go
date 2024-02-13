@@ -17,7 +17,8 @@ var (
 func main() {
 
 	var err error
-	db, err = sql.Open("postgres", "postgres://postgres:postgres@localhost/savannahdb?sslmode=disable")
+	// db, err = sql.Open("postgres", "postgres://postgres:postgres@localhost/savannahdb?sslmode=disable")
+	db, err = sql.Open("postgres", "dbname=savannahdb user=postgres password=Test12345 host=localhost sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -26,7 +27,7 @@ func main() {
 	router.GET("/customers", getCustomers)
 	router.POST("/customers", createCustomer)
 
-	router.Run("localhost:8080")
+	router.Run("localhost:8088")
 }
 
 // returns a list of customers from the database
