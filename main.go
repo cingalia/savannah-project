@@ -29,6 +29,7 @@ func main() {
 	router.Run("localhost:8080")
 }
 
+// returns a list of customers from the database
 func getCustomers(c *gin.Context) {
 	c.Header("Content-Type", "application/json")
 
@@ -61,4 +62,25 @@ type customer struct {
 	LastName  string `json:"lastname"`
 	Phone     string `json:"phone"`
 	Email     string `json:"email"`
+}
+
+func createCustomer(c *gin.Context) {
+
+	var awesomeCustomer customer
+	if err := c.BindJSON(&awesomeCustomer); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+
+	stmt, err := db.Prepare("INSERT INTO customers (id, firstname, lastname, phone, email) VALUES ($1, $2, $3, $4, $5)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+
+	if _, err := stmt.Exec(awesomeCustomer.ID, awesomeCustomer.FirstName, awesomeCustomer.LastName, awesomeCustomer.Phone, awesomeCustomer.Email); err != nil {
+		log.Fatal(err)
+	}
+
+	c.JSON(http.StatusCreated, awesomeCustomer)
 }
