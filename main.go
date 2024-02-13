@@ -68,6 +68,14 @@ type customer struct {
 	Last_Login string `json:"last_login"`
 }
 
+type customerViewModel struct {
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+	Phone     string `json:"phone"`
+	Password  string `json:"password"`
+	Email     string `json:"email"`
+}
+
 func createCustomer(c *gin.Context) {
 
 	var awesomeCustomer customer
