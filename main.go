@@ -104,7 +104,7 @@ func loginCustomer(c *gin.Context) {
 	}
 
 	//get user by phone
-	row := db.QueryRow("SELECT id, firstname, lastname, phone, password, email, created_at FROM customers WHERE phone = " + loginCustomer.Phone)
+	row := db.QueryRow("SELECT phone, password FROM customers WHERE phone = $1", loginCustomer.Phone)
 	err := row.Scan(&loginCustomer.Phone, &password)
 	switch err {
 	case sql.ErrNoRows:
@@ -112,8 +112,17 @@ func loginCustomer(c *gin.Context) {
 		return
 	case nil:
 		// check password
-		validation := bcrypt.CompareHashAndPassword([]byte(loginCustomer.Password), []byte(password))
-		c.JSON(http.StatusCreated, validation)
+		log.Println(password)
+		log.Println(loginCustomer.Password)
+		validation := bcrypt.CompareHashAndPassword([]byte(password), []byte(loginCustomer.Password))
+		if validation == nil {
+			c.JSON(http.StatusOK, "Login Ok")
+			return
+		} else {
+			c.JSON(http.StatusForbidden, "Password do not match")
+			return
+		}
+
 	default:
 		log.Fatal(err)
 	}
@@ -126,7 +135,7 @@ func registerCustomer(c *gin.Context) {
 		return
 	}
 	//hash password
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(awesomeCustomer.Phone), bcrypt.DefaultCost)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(awesomeCustomer.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Fatal(err)
 	}
