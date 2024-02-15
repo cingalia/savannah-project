@@ -28,6 +28,7 @@ func main() {
 	router.GET("/customers", getCustomers)
 	router.POST("/customers", createCustomer)
 	router.POST("/register", registerCustomer)
+	router.POST("/login", loginCustomer)
 
 	router.Run("localhost:8088")
 }
@@ -86,6 +87,36 @@ type customerViewModel struct {
 	Email      string `json:"email"`
 	Created_At string `json:"created_at"`
 	Last_Login string `json:"last_login"`
+}
+
+type login struct {
+	Phone    string `json:"phone"`
+	Password string `json:"password"`
+}
+
+func loginCustomer(c *gin.Context) {
+	var loginCustomer login
+	var password string
+	// var validation string
+	if err := c.BindJSON(&loginCustomer); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+
+	//get user by phone
+	row := db.QueryRow("SELECT id, firstname, lastname, phone, password, email, created_at FROM customers WHERE phone = " + loginCustomer.Phone)
+	err := row.Scan(&loginCustomer.Phone, &password)
+	switch err {
+	case sql.ErrNoRows:
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "User Not Found"})
+		return
+	case nil:
+		// check password
+		validation := bcrypt.CompareHashAndPassword([]byte(loginCustomer.Password), []byte(password))
+		c.JSON(http.StatusCreated, validation)
+	default:
+		log.Fatal(err)
+	}
 }
 
 func registerCustomer(c *gin.Context) {
