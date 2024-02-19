@@ -29,8 +29,18 @@ func main() {
 	router.POST("/customers", createCustomer)
 	router.POST("/register", registerCustomer)
 	router.POST("/login", loginCustomer)
+	router.GET("/orders", getOrders)
+	router.POST("/orders", createOrder)
 
 	router.Run("localhost:8088")
+}
+
+func createOrder(c *gin.Context) {
+
+}
+
+func getOrders(c *gin.Context) {
+
 }
 
 // returns a list of customers from the database
