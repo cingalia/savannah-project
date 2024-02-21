@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -13,8 +15,13 @@ import (
 )
 
 var (
-	prefix string = "/api/v1" // API prefix
-	db     *sql.DB
+	db *sql.DB
+)
+
+const (
+	username = "sandbox"                                                          //Your Africa's Talking Username
+	apiKey   = "86208402466e939a2ed4c971b20dd84a7ad7674237fead0c6e8ba5e4f82e7152" //Production or Sandbox API Key
+	env      = "Sandbox"                                                          // Choose either Sandbox or Production
 )
 
 func main() {
@@ -127,7 +134,40 @@ func createOrder(c *gin.Context) {
 		log.Fatal(err)
 	}
 
-	//Send SMS to customer
+	//get customers number
+	var phone string
+	row := db.QueryRow("SELECT phone FROM customers WHERE id = $1", newOrder.Customer_Id)
+	err = row.Scan(&phone)
+	switch err {
+	case sql.ErrNoRows:
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "phone not found"})
+		return
+	case nil:
+		// current item information
+		log.Println(phone)
+		//Send SMS to customer
+		client := &http.Client{}
+		var data = strings.NewReader(`username=sandbox&to=%2B` + phone + `&message=Hello%20World!&from=23370`)
+		req, err := http.NewRequest("POST", "https://api.sandbox.africastalking.com/version1/messaging", data)
+		if err != nil {
+			log.Fatal(err)
+		}
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.Header.Set("apiKey", "86208402466e939a2ed4c971b20dd84a7ad7674237fead0c6e8ba5e4f82e7152")
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer resp.Body.Close()
+		bodyText, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("%s\n", bodyText)
+	default:
+		log.Fatal(err)
+	}
 
 	c.JSON(http.StatusCreated, newOrder)
 }
