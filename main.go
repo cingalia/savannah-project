@@ -38,7 +38,29 @@ func main() {
 }
 
 func getItems(c *gin.Context) {
+	c.Header("Content-Type", "application/json")
 
+	rows, err := db.Query("SELECT id, name, description, price, created_at FROM items")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var items []item
+	for rows.Next() {
+		var a item
+		err := rows.Scan(&a.ID, &a.Name, &a.Description, &a.Price, &a.Created_At)
+		if err != nil {
+			log.Fatal(err)
+		}
+		items = append(items, a)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	c.IndentedJSON(http.StatusOK, items)
 }
 
 func createItems(c *gin.Context) {
