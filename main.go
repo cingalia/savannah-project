@@ -32,7 +32,7 @@ func main() {
 	router.GET("/orders", getOrders)
 	router.POST("/orders", createOrder)
 	router.GET("/items", getItems)
-	router.POST("/items", createItems)
+	router.POST("/items", createItem)
 
 	router.Run("localhost:8088")
 }
@@ -63,7 +63,7 @@ func getItems(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, items)
 }
 
-func createItems(c *gin.Context) {
+func createItem(c *gin.Context) {
 	var newItem itemViewModel
 	if err := c.BindJSON(&newItem); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
@@ -84,7 +84,23 @@ func createItems(c *gin.Context) {
 }
 
 func createOrder(c *gin.Context) {
+	var newOrder orderViewModel
+	if err := c.BindJSON(&newOrder); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
 
+	stmt, err := db.Prepare("INSERT INTO orders (customer_id, items_ids, summary, total_price) VALUES ($1, $2, $3, $4)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+
+	if _, err := stmt.Exec(newOrder.Customer_Id, newOrder.Items_Ids, newOrder.Summary, newOrder.Total_Price); err != nil {
+		log.Fatal(err)
+	}
+
+	c.JSON(http.StatusCreated, newOrder)
 }
 
 func getOrders(c *gin.Context) {
@@ -155,7 +171,16 @@ type order struct {
 	ID          string `json:"id"`
 	Customer_Id string `json:"customer_id"`
 	Items_Ids   []int  `json:"Items_ids"`
+	Summary     string `json:"summary"`
+	Total_Price int    `json:"total_price"`
 	Created_At  string `json:"created_at"`
+}
+
+type orderViewModel struct {
+	Customer_Id string `json:"customer_id"`
+	Items_Ids   []int  `json:"Items_ids"`
+	Summary     string `json:"summary"`
+	Total_Price int    `json:"total_price"`
 }
 
 type item struct {
