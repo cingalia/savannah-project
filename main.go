@@ -31,8 +31,18 @@ func main() {
 	router.POST("/login", loginCustomer)
 	router.GET("/orders", getOrders)
 	router.POST("/orders", createOrder)
+	router.GET("/items", getItems)
+	router.POST("/items", createItems)
 
 	router.Run("localhost:8088")
+}
+
+func getItems(c *gin.Context) {
+
+}
+
+func createItems(c *gin.Context) {
+
 }
 
 func createOrder(c *gin.Context) {
@@ -40,7 +50,29 @@ func createOrder(c *gin.Context) {
 }
 
 func getOrders(c *gin.Context) {
+	// c.Header("Content-Type", "application/json")
 
+	// rows, err := db.Query("SELECT id, customer_id, item, description, price, created_at FROM orders")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer rows.Close()
+
+	// var orders []order
+	// for rows.Next() {
+	// 	var a order
+	// 	err := rows.Scan(&a.ID, &a.Customer_Id, &a.Item, &a.Description, &a.Price, &a.Created_At)
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// 	orders = append(orders, a)
+	// }
+	// err = rows.Err()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// c.IndentedJSON(http.StatusOK, orders)
 }
 
 // returns a list of customers from the database
@@ -79,6 +111,29 @@ type customer struct {
 	Email      string `json:"email"`
 	Created_At string `json:"created_at"`
 	Last_Login string `json:"last_login"`
+}
+
+type order struct {
+	ID          string `json:"id"`
+	Customer_Id string `json:"customer_id"`
+	Items       []item `json:"Items"`
+	Created_At  string `json:"created_at"`
+}
+
+type item struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Price       int    `json:"price"`
+	Quantity    int    `json:"quantity"`
+	Created_At  string `json:"created_at"`
+}
+
+type itemViewModel struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Price       int    `json:"price"`
+	Quantity    int    `json:"quantity"`
 }
 
 type customerReadModel struct {
