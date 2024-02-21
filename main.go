@@ -125,7 +125,6 @@ type item struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Price       int    `json:"price"`
-	Quantity    int    `json:"quantity"`
 	Created_At  string `json:"created_at"`
 }
 
