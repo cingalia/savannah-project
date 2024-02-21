@@ -154,7 +154,7 @@ type customer struct {
 type order struct {
 	ID          string `json:"id"`
 	Customer_Id string `json:"customer_id"`
-	Items       []item `json:"Items"`
+	Items_Ids   []int  `json:"Items_ids"`
 	Created_At  string `json:"created_at"`
 }
 
