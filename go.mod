@@ -3,6 +3,7 @@ module savannah-project
 go 1.22.0
 
 require (
+	github.com/AndroidStudyOpenSource/africastalking-go v0.0.0-20200515172509-94a151ad63fe // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect

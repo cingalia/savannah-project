@@ -127,6 +127,8 @@ func createOrder(c *gin.Context) {
 		log.Fatal(err)
 	}
 
+	//Send SMS to customer
+
 	c.JSON(http.StatusCreated, newOrder)
 }
 
