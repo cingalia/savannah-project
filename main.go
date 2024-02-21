@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
@@ -85,11 +87,36 @@ func createItem(c *gin.Context) {
 
 func createOrder(c *gin.Context) {
 	var newOrder orderViewModel
+	var summarybuilder strings.Builder
+	summarybuilder.WriteString("You order:")
+
 	if err := c.BindJSON(&newOrder); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
+	// get items ids
+	itemIds := strings.Split(newOrder.Items_Ids, ",")
+	//get items information from database
+	for i := 0; i < len(itemIds); i++ {
+		var currentItem item
+		row := db.QueryRow("SELECT id, name, description, price, created_at FROM items WHERE id = $1", itemIds[i])
+		err := row.Scan(&currentItem.ID, &currentItem.Name, &currentItem.Description, &currentItem.Price, &currentItem.Created_At)
+		switch err {
+		case sql.ErrNoRows:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Item not found"})
+			return
+		case nil:
+			// current item information
+			log.Println(currentItem)
+			summarybuilder.WriteString(" " + strconv.Itoa(i+1) + " - " + currentItem.Name + " Price: Kshs " + strconv.Itoa(currentItem.Price))
+			newOrder.Total_Price = newOrder.Total_Price + currentItem.Price
+		default:
+			log.Fatal(err)
+		}
+	}
+	newOrder.Summary = summarybuilder.String()
+	//Insert into db
 	stmt, err := db.Prepare("INSERT INTO orders (customer_id, items_ids, summary, total_price) VALUES ($1, $2, $3, $4)")
 	if err != nil {
 		log.Fatal(err)
@@ -169,16 +196,16 @@ type customer struct {
 
 type order struct {
 	ID          string `json:"id"`
-	Customer_Id string `json:"customer_id"`
-	Items_Ids   []int  `json:"Items_ids"`
+	Customer_Id int    `json:"customer_id"`
+	Items_Ids   string `json:"Items_ids"`
 	Summary     string `json:"summary"`
 	Total_Price int    `json:"total_price"`
 	Created_At  string `json:"created_at"`
 }
 
 type orderViewModel struct {
-	Customer_Id string `json:"customer_id"`
-	Items_Ids   []int  `json:"Items_ids"`
+	Customer_Id int    `json:"customer_id"`
+	Items_Ids   string `json:"Items_ids"`
 	Summary     string `json:"summary"`
 	Total_Price int    `json:"total_price"`
 }
