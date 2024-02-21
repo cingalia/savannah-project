@@ -42,7 +42,23 @@ func getItems(c *gin.Context) {
 }
 
 func createItems(c *gin.Context) {
+	var newItem itemViewModel
+	if err := c.BindJSON(&newItem); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
 
+	stmt, err := db.Prepare("INSERT INTO items (name, description, price) VALUES ($1, $2, $3)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+
+	if _, err := stmt.Exec(newItem.Name, newItem.Description, newItem.Price); err != nil {
+		log.Fatal(err)
+	}
+
+	c.JSON(http.StatusCreated, newItem)
 }
 
 func createOrder(c *gin.Context) {
@@ -132,7 +148,6 @@ type itemViewModel struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Price       int    `json:"price"`
-	Quantity    int    `json:"quantity"`
 }
 
 type customerReadModel struct {
